@@ -1,5 +1,7 @@
 import  UserModel from '../model/user.model.js';
 import bcrypt from 'bcrypt';
+import userModel from '../model/user.model.js';
+import {  } from 'jsonwebtoken';
 
 
 export  async function register(req, res){
@@ -22,11 +24,23 @@ export  async function register(req, res){
         })
     });
 
-    Promise.all[exitUsername,exitEmail]
+    Promise.all([exitUsername,exitEmail])
       .then(()=>{
             if(password){
                bcrypt.hash(password, 10)
-               .then(hashedPassword =>{
+                 .then(hashedPassword =>{
+
+                const user  = new UserModel({
+                    username,
+                    password: hashedPassword,
+                    profile: profile  || '',
+                    email
+
+                })
+
+                user.save()
+                     .then(result => res.status(201).send({msg: "User Register Successfully"}))
+                     .catch(error => res.status(500).send({error}))
 
                }).catch(error =>{ return res.status(500).send({
                    error : "Enable to hashed password"
@@ -50,7 +64,49 @@ export  async function register(req, res){
 
 
 export  async function login(req, res){
-    res.json('login route')
+   
+    const { username, password} = req.body;
+        try{
+            userModel.findOne({username})
+              .then(user =>{
+                bcrypt.compare(password, user.password)
+                   .then(passwordCheck =>{
+                      if(!passwordCheck) return res.status (400).send({ error: "Dont't have a password"}
+                      
+                      
+                      
+                      
+                      
+                      )
+
+                    const token=   jwt.sign({
+                                          userId: user._id, 
+                                         username :user.username
+                                     },'secret', { expiresIn : "24h"});
+                            return res.status(200).send({
+                                msg:"Login sucessfully...!",
+                                username: user.username,
+                                token
+            
+                            });
+                    })
+                   .catch(error =>{
+                    return res.status(400).send ({error: "Password does not match"})                 
+                  })
+              }) 
+                .catch(error =>{
+                    return res.status(404).send ({error : "Username not Found"});
+
+
+                })
+
+
+        }catch(error){
+            return res.status(500).send({error});
+        }
+ 
+
+
 }
 
 export  async function getUser(req, res){
