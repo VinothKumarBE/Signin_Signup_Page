@@ -1,7 +1,8 @@
 import  UserModel from '../model/user.model.js';
 import bcrypt from 'bcrypt';
 import userModel from '../model/user.model.js';
-import {  } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import ENV from '../config.js';
 
 
 export  async function register(req, res){
@@ -71,18 +72,12 @@ export  async function login(req, res){
               .then(user =>{
                 bcrypt.compare(password, user.password)
                    .then(passwordCheck =>{
-                      if(!passwordCheck) return res.status (400).send({ error: "Dont't have a password"}
-                      
-                      
-                      
-                      
-                      
-                      )
+                      if(!passwordCheck) return res.status (400).send({ error: "Dont't have a password"})
 
-                    const token=   jwt.sign({
+                        const token= jwt.sign({
                                           userId: user._id, 
                                          username :user.username
-                                     },'secret', { expiresIn : "24h"});
+                                     }, ENV.JWT_SECRET, { expiresIn : "24h"});
                             return res.status(200).send({
                                 msg:"Login sucessfully...!",
                                 username: user.username,
@@ -91,7 +86,7 @@ export  async function login(req, res){
                             });
                     })
                    .catch(error =>{
-                    return res.status(400).send ({error: "Password does not match"})                 
+                    return res.status(400).send({error: "Password does not match"})                 
                   })
               }) 
                 .catch(error =>{
