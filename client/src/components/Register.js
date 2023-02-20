@@ -1,29 +1,42 @@
 import React, { useState } from 'react';
-import {Link}  from 'react-router-dom';
+import {Link, useNavigate}  from 'react-router-dom';
 import avatar from '../assets/profile.png';
 import Styles from '../styles/Username.module.css'
-import {Toaster} from 'react-hot-toast';
+import  toast,{Toaster} from 'react-hot-toast';
 import {useFormik} from 'formik';
 import { registerValidation } from '../helper/validate';
 import convertToBase64 from '../helper/convert';
+import { registerUser } from '../helper/helper';
+
 
 export default function Register() {
-   const [file,setFile] = useState()
+   
+    const navigate = useNavigate()
+    const [file,setFile] = useState()
 
    const formik = useFormik({
 
      initialValues:{
-      email: "",
-      username: "",
-      password: "" 
+      email: "balaji123@gmail.com",
+      username: "balaji",
+      password: "Balaji@123" 
 
   },
   validate: registerValidation,
   validateOnBlur: false,
   validateOnChange: false,
-  onSubmit: async values =>{
-    values= await Object.assign(values, {profile:file || ''})
-    console.log(values);
+  onSubmit : async values =>{
+     values = await Object.assign(values, { profile: file || ''})
+   let registerPromise = registerUser(values)
+    toast.promise(registerPromise, {
+    loading: 'Creating',
+    success: <b>Register sucessfully...!</b>,
+    error : <b>Could not  Register</b>
+
+  });
+
+  registerPromise.then(function(){ navigate('/')});
+    
   }
 });
 
@@ -38,9 +51,9 @@ const onUpload = async e =>{
           <Toaster position='top-center' reverseOrder={false}></Toaster>
 
           <div  className='flex justify-center items-center h-screen'>
-             <div className={Styles.glass} style={{width:"50%",height:"110%"}}>
+             <div className={Styles.glass} style={{width:"50%",height:"100%"}}>
                 <div className='title flex flex-col items-center'>
-                    <h4 className='text-5xl font-bold'> Register </h4>
+                    <h4 className='text-3xl font-bold'> Register </h4>
                       <span className='py-4 text-xl w-2/3 text-center text-gray-500'>Happy to join you!
                        </span>
                         </div>

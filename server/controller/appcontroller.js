@@ -24,7 +24,7 @@ export async function verifyUser(req,res,next) {
 //register
 export  async function register(req, res){
  try{
-    const  { username, password, profile, email} = req.body
+    const  { username, password, profile, email} = req.body;
 
     const  exitUsername = new Promise((resolve, reject)=>{
         UserModel.findOne({username},function(err,user){
@@ -34,7 +34,7 @@ export  async function register(req, res){
         })
     });
 
-    const  exitEmail = new Promise((resolve, reject)=>{
+    const  existEmail = new Promise((resolve, reject)=>{
         UserModel.findOne({email},function(err,email){
             if(err) reject(new Error(err))
             if(email) reject({error: "please use unique username"})
@@ -42,7 +42,7 @@ export  async function register(req, res){
         })
     });
 
-    Promise.all([exitUsername,exitEmail])
+    Promise.all([exitUsername,existEmail])
       .then(()=>{
             if(password){
                bcrypt.hash(password, 10)
@@ -69,13 +69,7 @@ export  async function register(req, res){
       }).catch(error =>{
         return res.status(500).send({ error})
       })
-
-
-
-
-
-
- }catch(error) {
+      }catch(error) {
     return res.status(500).send(error)
  }
 }
@@ -190,10 +184,51 @@ export  async function verifyOTP(req, res){
 
 
 export  async function createResetSession(req, res){
-    res.json('createResetSession route')
+    if(req.app.locals.resetSession){
+        
+        return res.status(201).send({ flag: req.app.locals.resetSession})
+    }
+    return res.status (440).send({ error: "session  expired!"})
 }
 
-// export  async function resetPassword(req, res){
-//     res.json('resetPassword route')
-// } 
+export  async function resetPassword(req, res){
+    try {
+        
+        if(!req.app.locals.resetSession) return res.status(440).send({error : "Session expired!"});
+
+        const { username, password } = req.body;
+
+        try {
+            
+            UserModel.findOne({ username})
+              .then(user => {
+              bcrypt.hash(password, 10)
+            .then(hashedPassword => {
+        UserModel.updateOne({ username : user.username },
+        { password: hashedPassword}, function(err, data){
+            if(err) throw err;
+             req.app.locals.resetSession = false; // reset session
+             return res.status(201).send({ msg : "Record Updated...!"})
+    });
+})
+     .catch( e => {
+                 return res.status(500).send({
+                   error : "Enable to hashed password"
+                })
+         })
+                })
+                .catch(error => {
+                    return res.status(404).send({ error : "Username not Found"});
+                })
+
+        } catch (error) {
+            return res.status(500).send({ error })
+        }
+
+    } catch (error) {
+        return res.status(401).send({ error })
+    }
+}
+
+ 
 
