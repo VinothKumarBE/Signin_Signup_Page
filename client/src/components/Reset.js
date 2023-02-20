@@ -2,11 +2,27 @@ import React from 'react';
 import {Link}  from 'react-router-dom';
 //import avatar from '../assets/profile.png';
 import Styles from '../styles/Username.module.css'
-import {Toaster} from 'react-hot-toast';
+import toast,{Toaster} from 'react-hot-toast';
 import {useFormik} from 'formik'
 import { resetPasswordValidation } from '../helper/validate';
+import { resetPassword } from '../helper/helper';
+import { useAuthStore } from '../store/store';
+import {  useNavigate, Navigate } from 'react-router-dom';
+import useFetch from '../hooks/fetch.hook';
+import { useEffect } from 'react';
 
 export default function Reset() {
+
+
+
+  const {username} = useAuthStore(state => state.auth)
+  const navigate = useNavigate();
+   const [{isLoading, apiData, status, serverError}] = useFetch('createResetSession')
+
+  //  useEffect(()=>{
+  //   console.log(apiData)
+
+  //  })
 
 
    const formik = useFormik({
@@ -20,9 +36,21 @@ export default function Reset() {
   validateOnBlur: false,
   validateOnChange: false,
   onSubmit: async values =>{
-    console.log(values);
+    // console.log(values);
+
+    let resetPromise = resetPassword({username, password: values.password})
+    toast.promise(resetPromise, {
+      loading:'Updating',
+      success:<b>Reset Successfully</b>,
+      error:<b>Could not Reset! </b>
+    });
+    resetPromise.then(function(){ navigate('/password')})
   }
 })
+
+if(isLoading) return <h1  className='text-2xl font-bold'>is Loading</h1>
+if(serverError) return <h1 className='text-xl text-red-500'>{serverError.message}</h1>
+if(status && status !== 201) return <Navigate to={'/password'} replace={true}></Navigate>
   return (
  
         //items-center
